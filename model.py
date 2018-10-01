@@ -44,10 +44,10 @@ class Conv2dBlock(nn.Module):
         elif norm == 'in':
             #self.norm = nn.InstanceNorm2d(norm_dim, track_running_stats=True)
             self.norm = nn.InstanceNorm2d(norm_dim)
-        """ elif norm == 'ln':
-            self.norm = LayerNorm(norm_dim)
-        elif norm == 'adain':
-            self.norm = AdaptiveInstanceNorm2d(norm_dim) """
+        #elif norm == 'ln':
+            # self.norm = LayerNorm(norm_dim)
+        # elif norm == 'adain':
+            # self.norm = AdaptiveInstanceNorm2d(norm_dim)
         elif norm == 'none':
             self.norm = None
         else:
@@ -96,6 +96,79 @@ class ResBlock(nn.Module):
         out = self.model(x)
         out += residual
         return out
+#################################################################
+#Linear block
+#################################################################
+class LinearBlock(nn.Module):
+    def __init__(self, input_dim, output_dim, norm='none', activation='relu'):
+        super(LinearBlock, self).__init__()
+        use_bias = True
+        # initialize fully connected layer
+        self.fc = nn.Linear(input_dim, output_dim, bias=use_bias)
+
+        # initialize normalization
+        norm_dim = output_dim
+        if norm == 'bn':
+            self.norm = nn.BatchNorm1d(norm_dim)
+        elif norm == 'in':
+            self.norm = nn.InstanceNorm1d(norm_dim)
+        elif norm == 'ln':
+            self.norm = LayerNorm(norm_dim)
+        elif norm == 'none':
+            self.norm = None
+        else:
+            assert 0, "Unsupported normalization: {}".format(norm)
+
+        # initialize activation
+        if activation == 'relu':
+            self.activation = nn.ReLU(inplace=True)
+        elif activation == 'lrelu':
+            self.activation = nn.LeakyReLU(0.2, inplace=True)
+        elif activation == 'prelu':
+            self.activation = nn.PReLU()
+        elif activation == 'selu':
+            self.activation = nn.SELU(inplace=True)
+        elif activation == 'tanh':
+            self.activation = nn.Tanh()
+        elif activation == 'none':
+            self.activation = None
+        else:
+            assert 0, "Unsupported activation: {}".format(activation)
+
+    def forward(self, x):
+        out = self.fc(x)
+        if self.norm:
+            out = self.norm(out)
+        if self.activation:
+            out = self.activation(out)
+        return out
+##################################################################################
+# Sequential Models
+##################################################################################
+class ResBlocks(nn.Module):
+    def __init__(self, num_blocks, dim, norm='in', activation='relu', pad_type='zero'):
+        super(ResBlocks, self).__init__()
+        self.model = []
+        for i in range(num_blocks):
+            self.model += [ResBlock(dim, norm=norm, activation=activation, pad_type=pad_type)]
+        self.model = nn.Sequential(*self.model)
+
+    def forward(self, x):
+        return self.model(x)
+
+class MLP(nn.Module):
+    def __init__(self, input_dim, output_dim, dim, n_blk, norm='none', activ='relu'):
+
+        super(MLP, self).__init__()
+        self.model = []
+        self.model += [LinearBlock(input_dim, dim, norm=norm, activation=activ)]
+        for i in range(n_blk - 2):
+            self.model += [LinearBlock(dim, dim, norm=norm, activation=activ)]
+        self.model += [LinearBlock(dim, output_dim, norm='none', activation='none')] # no output activations
+        self.model = nn.Sequential(*self.model)
+
+    def forward(self, x):
+        return self.model(x.view(x.size(0), -1))
 #################################################################
 #Discriminator
 #################################################################
