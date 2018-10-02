@@ -44,10 +44,10 @@ class Conv2dBlock(nn.Module):
         elif norm == 'in':
             #self.norm = nn.InstanceNorm2d(norm_dim, track_running_stats=True)
             self.norm = nn.InstanceNorm2d(norm_dim)
-        #elif norm == 'ln':
-            # self.norm = LayerNorm(norm_dim)
-        # elif norm == 'adain':
-            # self.norm = AdaptiveInstanceNorm2d(norm_dim)
+        elif norm == 'ln':
+            self.norm = LayerNorm(norm_dim)
+        elif norm == 'adain':
+            self.norm = AdaptiveInstanceNorm2d(norm_dim)
         elif norm == 'none':
             self.norm = None
         else:
@@ -83,6 +83,13 @@ class Conv2dBlock(nn.Module):
 #Res block
 #################################################################
 class ResBlock(nn.Module):
+    """
+    arg:
+        dim:输入的通道数
+        norm:选择归一化层的形式
+        activation:激活函数的形式
+        pad_type:padding的形式
+    """
     def __init__(self, dim, norm='in', activation='relu', pad_type='zero'):
         super(ResBlock, self).__init__()
 
@@ -100,6 +107,13 @@ class ResBlock(nn.Module):
 #Linear block
 #################################################################
 class LinearBlock(nn.Module):
+    """
+    arg:
+        input_dim:输入的神经元数
+        output_dim:输出的神经元数
+        norm:使用但归一化方式
+        activation:使用的激活函数
+    """
     def __init__(self, input_dim, output_dim, norm='none', activation='relu'):
         super(LinearBlock, self).__init__()
         use_bias = True
@@ -142,10 +156,18 @@ class LinearBlock(nn.Module):
         if self.activation:
             out = self.activation(out)
         return out
-##################################################################################
+####################################################################
 # Sequential Models
-##################################################################################
+####################################################################
 class ResBlocks(nn.Module):
+    """
+    arg:
+        num_blocks:残差块数
+        dim:输入通道数
+        norm:使用但归一化方式
+        activation:使用的激活函数
+        pad_type:使用的pad方式
+    """
     def __init__(self, num_blocks, dim, norm='in', activation='relu', pad_type='zero'):
         super(ResBlocks, self).__init__()
         self.model = []
@@ -157,6 +179,15 @@ class ResBlocks(nn.Module):
         return self.model(x)
 
 class MLP(nn.Module):
+    """
+    arg:
+        input_dim:全连接层输入维度
+        output_dim:全连接层输出维度
+        dim:隐含层维度
+        n_blk:隐含层层数
+        norm:归一化方法
+        activ:激活函数
+    """
     def __init__(self, input_dim, output_dim, dim, n_blk, norm='none', activ='relu'):
 
         super(MLP, self).__init__()
@@ -170,6 +201,128 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.model(x.view(x.size(0), -1))
 #################################################################
-#Discriminator
+#encoder and decoder block
+#################################################################
+class ContentEncoder(nn.Module):
+    """
+    arg:
+        n_downsample:下采样层数
+        n_res:残差层层数
+        input_dim:输入维度
+        dim:下采样前feature map的纬度
+        norm:归一化方法
+        activ:激活函数
+        pad_type:padding的方式
+    """
+    def __init__(self, n_downsample, n_res, input_dim, dim, norm, activ, pad_type):
+        super(ContentEncoder, self).__init__()
+        self.model = []
+        self.model += [Conv2dBlock(input_dim, dim, 7, 1, 3, norm=norm, activation=activ, pad_type=pad_type)]
+        # downsampling blocks
+        for i in range(n_downsample):
+            self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type=pad_type)]
+            dim *= 2
+        # residual blocks
+        self.model += [ResBlocks(n_res, dim, norm=norm, activation=activ, pad_type=pad_type)]
+        self.model = nn.Sequential(*self.model)
+        self.output_dim = dim
+
+    def forward(self, x):
+        return self.model(x)
+
+class Decoder(nn.Module):
+    """
+    arg:
+        n_upsample:上采样层数
+        n_res:残差层层数
+        dim:下采样前feature map的纬度
+        output_dim:输出维度
+        res_norm:归一化方法
+        activ:激活函数
+        pad_type:padding的方式
+    """
+    def __init__(self, n_upsample, n_res, dim, output_dim, res_norm='adain', activ='relu', pad_type='zero'):
+        super(Decoder, self).__init__()
+
+        self.model = []
+        # AdaIN residual blocks
+        self.model += [ResBlocks(n_res, dim, res_norm, activ, pad_type=pad_type)]
+        # upsampling blocks
+        for i in range(n_upsample):
+            self.model += [nn.Upsample(scale_factor=2),
+                           Conv2dBlock(dim, dim // 2, 5, 1, 2, norm='ln', activation=activ, pad_type=pad_type)]
+            dim //= 2
+        # use reflection padding in the last conv layer
+        self.model += [Conv2dBlock(dim, output_dim, 7, 1, 3, norm='none', activation='tanh', pad_type=pad_type)]
+        self.model = nn.Sequential(*self.model)
+
+    def forward(self, x):
+        return self.model(x)
+##################################################################################
+# Normalization layers
+##################################################################################
+class AdaptiveInstanceNorm2d(nn.Module):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1):
+        super(AdaptiveInstanceNorm2d, self).__init__()
+        self.num_features = num_features
+        self.eps = eps
+        self.momentum = momentum
+        # weight and bias are dynamically assigned
+        self.weight = None
+        self.bias = None
+        # just dummy buffers, not used
+        self.register_buffer('running_mean', torch.zeros(num_features))
+        self.register_buffer('running_var', torch.ones(num_features))
+
+    def forward(self, x):
+        assert self.weight is not None and self.bias is not None, "Please assign weight and bias before calling AdaIN!"
+        b, c = x.size(0), x.size(1)
+        running_mean = self.running_mean.repeat(b)
+        running_var = self.running_var.repeat(b)
+
+        # Apply instance norm
+        x_reshaped = x.contiguous().view(1, b * c, *x.size()[2:])
+
+        out = F.batch_norm(
+            x_reshaped, running_mean, running_var, self.weight, self.bias,
+            True, self.momentum, self.eps)
+
+        return out.view(b, c, *x.size()[2:])
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + str(self.num_features) + ')'
+
+
+class LayerNorm(nn.Module):
+    def __init__(self, num_features, eps=1e-5, affine=True):
+        super(LayerNorm, self).__init__()
+        self.num_features = num_features
+        self.affine = affine
+        self.eps = eps
+
+        if self.affine:
+            self.gamma = nn.Parameter(torch.Tensor(num_features).uniform_())
+            self.beta = nn.Parameter(torch.zeros(num_features))
+
+    def forward(self, x):
+        shape = [-1] + [1] * (x.dim() - 1)
+        # print(x.size())
+        if x.size(0) == 1:
+            # These two lines run much faster in pytorch 0.4 than the two lines listed below.
+            mean = x.view(-1).mean().view(*shape)
+            std = x.view(-1).std().view(*shape)
+        else:
+            mean = x.view(x.size(0), -1).mean(1).view(*shape)
+            std = x.view(x.size(0), -1).std(1).view(*shape)
+
+        x = (x - mean) / (std + self.eps)
+
+        if self.affine:
+            shape = [1, -1] + [1] * (x.dim() - 2)
+            x = x * self.gamma.view(*shape) + self.beta.view(*shape)
+        return x
+
+#################################################################
+#VAE
 #################################################################
 
