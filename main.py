@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 trainer.dis_update(images_a, images_b, config)
                 trainer.gen_update(images_a, images_b, config)
                 torch.cuda.synchronize()
-            if iterations == 10:
+            if iterations%10 == 0:
                 write_loss(iterations,trainer,train_writer)
             iterations += 1
                 
