@@ -53,6 +53,7 @@ if __name__ == "__main__":
                 torch.cuda.synchronize()
             if iterations == 10:
                 write_loss(iterations,trainer,train_writer)
+            iterations += 1
                 
             
     
