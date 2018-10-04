@@ -27,6 +27,7 @@ trainer.cuda()
 train_a,test_a,train_b,test_b = get_train_test_data_loader(
         root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],num_workers=config['num_worker']
     )
+#train_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + "/logs", model_name))
 print(config)
 if __name__ == "__main__":
     while True:
@@ -38,4 +39,9 @@ if __name__ == "__main__":
                 trainer.dis_update(images_a, images_b, config)
                 trainer.gen_update(images_a, images_b, config)
                 torch.cuda.synchronize()
+            if it == 10:
+                break
+        trainer.save(config['model_path'],it)
+        break
+            
     

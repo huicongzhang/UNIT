@@ -11,6 +11,7 @@ from data import Dataset_folder
 from utils import get_train_test_data_loader,weights_init,get_config,get_lr_scheduler
 from model import VAEGen,MsImageDis
 import torch.nn as nn
+import os
 class UNIT_Gender_Trainer(nn.Module):
     def __init__(self,perparameters):
         super(UNIT_Gender_Trainer,self).__init__()
@@ -130,6 +131,15 @@ class UNIT_Gender_Trainer(nn.Module):
         x_ab = torch.cat(x_ab)
         self.train()
         return x_a, x_a_recon, x_ab, x_b, x_b_recon, x_ba
+    def save(self, snapshot_dir, iterations):
+        # Save generators, discriminators, and optimizers
+        gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
+        dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
+        opt_name = os.path.join(snapshot_dir, 'optimizer.pt')
+        torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
+        torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
+        torch.save({'gen': self.gen_opt.state_dict(), 'dis': self.dis_opt.state_dict()}, opt_name)
+
 
 
     
