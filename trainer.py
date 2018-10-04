@@ -133,6 +133,7 @@ class UNIT_Gender_Trainer(nn.Module):
         return x_a, x_a_recon, x_ab, x_b, x_b_recon, x_ba
     def save(self, snapshot_dir, iterations):
         # Save generators, discriminators, and optimizers
+        
         gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
         dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
         opt_name = os.path.join(snapshot_dir, 'optimizer.pt')

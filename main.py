@@ -9,7 +9,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision
 from data import Dataset_folder
-from utils import get_train_test_data_loader,weights_init,get_config,Timer,write_loss
+from utils import get_train_test_data_loader,weights_init,get_config,Timer,write_loss,write_2images
 import argparse
 from trainer import UNIT_Gender_Trainer
 import tensorboardX
@@ -27,11 +27,16 @@ trainer.cuda()
 train_a,test_a,train_b,test_b = get_train_test_data_loader(
         root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],num_workers=config['num_worker']
     )
+train_display_images_a = torch.stack([train_loader_a.dataset[i] for i in range(config['display_size'])]).cuda()
+train_display_images_b = torch.stack([train_loader_b.dataset[i] for i in range(config['display_size'])]).cuda()
+test_display_images_a = torch.stack([test_loader_a.dataset[i] for i in range(config['display_size'])]).cuda()
+test_display_images_b = torch.stack([test_loader_b.dataset[i] for i in range(config['display_size'])]).cuda()
+
 if os.path.exists(config['model_path']) is False:
             print("mkdir ./output/model")
             os.makedirs(config['model_path'])
 if os.path.exists(config['log_patch']) is False:
-            print("mkdir ./output/log")
+            print("mkdir ./output/log/logs")
             os.makedirs(config['log_patch'])
 
 if config['resume_model']:
@@ -39,7 +44,10 @@ if config['resume_model']:
     
 else:
     iterations = 0
-train_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + "/logs", config['log_filename']))
+train_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + '/trian'))
+test_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + '/test'))
+
+
 print(config)
 if __name__ == "__main__":
     while True:
@@ -53,6 +61,11 @@ if __name__ == "__main__":
                 torch.cuda.synchronize()
             if iterations%10 == 0:
                 write_loss(iterations,trainer,train_writer)
+                with torch.no_grad():
+                    test_image_outputs = trainer.sample(test_display_images_a, test_display_images_b)
+                    train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
+                write_2images(test_image_outputs, config['display_size'],'test',iterations,train_writer)
+                write_2images(train_image_outputs, config['display_size'],'train',iterations,test_writer)
             iterations += 1
                 
             
