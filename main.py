@@ -27,10 +27,10 @@ trainer.cuda()
 train_a,test_a,train_b,test_b = get_train_test_data_loader(
         root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],num_workers=config['num_worker']
     )
-train_display_images_a = torch.stack([train_loader_a.dataset[i] for i in range(config['display_size'])]).cuda()
-train_display_images_b = torch.stack([train_loader_b.dataset[i] for i in range(config['display_size'])]).cuda()
-test_display_images_a = torch.stack([test_loader_a.dataset[i] for i in range(config['display_size'])]).cuda()
-test_display_images_b = torch.stack([test_loader_b.dataset[i] for i in range(config['display_size'])]).cuda()
+train_display_images_a = torch.stack([train_a.dataset[i] for i in range(config['display_size'])]).cuda()
+train_display_images_b = torch.stack([train_b.dataset[i] for i in range(config['display_size'])]).cuda()
+test_display_images_a = torch.stack([test_a.dataset[i] for i in range(config['display_size'])]).cuda()
+test_display_images_b = torch.stack([test_b.dataset[i] for i in range(config['display_size'])]).cuda()
 
 if os.path.exists(config['model_path']) is False:
             print("mkdir ./output/model")
