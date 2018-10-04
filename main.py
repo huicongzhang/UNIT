@@ -34,7 +34,7 @@ if os.path.exists(config['log_patch']) is False:
             print("mkdir ./output/log")
             os.makedirs(config['log_patch'])
 
-if config['resume_mode']:
+if config['resume_model']:
     iterations = trainer.resume(config['model_path'],config)
     
 else:
