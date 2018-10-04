@@ -8,7 +8,7 @@ import torchvision
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.nn as nn
-from itertools import izip as zip
+#from itertools import izip as zip
 #################################################################
 #convblock 
 #################################################################
@@ -236,7 +236,7 @@ class Decoder(nn.Module):
     arg:
         n_upsample:上采样层数
         n_res:残差层层数
-        dim:下采样前feature map的纬度
+        dim:上采样前feature map的纬度
         output_dim:输出维度
         res_norm:归一化方法
         activ:激活函数
