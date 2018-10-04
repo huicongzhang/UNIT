@@ -30,9 +30,9 @@ recon_kl_w: 0.01              # weight of KL loss for reconstruction
 recon_x_cyc_w: 10             # weight of cycle consistency loss
 recon_kl_cyc_w: 0.01          # weight of KL loss for cycle consistency
 # dataset option
-root_dir: /Users/zhanghuicong/UTKFace/UTKFace
+root_dir: /home/zhc/Image/UTKFace/UTKFace
 csv_dir: ./datasets/UTKFace.csv
-batch_size: 2
+batch_size: 10
 num_worker: 4
 # cuda option
 CUDA_VISIBLE_DEVICES: '1'
