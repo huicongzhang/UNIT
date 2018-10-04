@@ -9,7 +9,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision
 from data import Dataset_folder
-from utils import get_train_test_data_loader,weights_init,get_config,Timer
+from utils import get_train_test_data_loader,weights_init,get_config,Timer,write_loss
 import argparse
 from trainer import UNIT_Gender_Trainer
 import tensorboardX
@@ -27,7 +27,19 @@ trainer.cuda()
 train_a,test_a,train_b,test_b = get_train_test_data_loader(
         root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],num_workers=config['num_worker']
     )
-#train_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + "/logs", model_name))
+if os.path.exists(config['model_path']) is False:
+            print("mkdir ./output/model")
+            os.makedirs(config['model_path'])
+if os.path.exists(config['log_patch']) is False:
+            print("mkdir ./output/log")
+            os.makedirs(config['log_patch'])
+
+if config['resume_mode']:
+    iterations = trainer.resume(config['model_path'],config)
+    
+else:
+    iterations = 0
+train_writer = tensorboardX.SummaryWriter(os.path.join(config['log_patch'] + "/logs", config['log_filename']))
 print(config)
 if __name__ == "__main__":
     while True:
@@ -39,9 +51,8 @@ if __name__ == "__main__":
                 trainer.dis_update(images_a, images_b, config)
                 trainer.gen_update(images_a, images_b, config)
                 torch.cuda.synchronize()
-            if it == 10:
-                break
-        trainer.save(config['model_path'],it)
-        break
+            if iterations == 10:
+                write_loss(iterations,trainer,train_writer)
+                
             
     

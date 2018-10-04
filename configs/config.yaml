@@ -37,8 +37,10 @@ num_worker: 4
 # cuda option
 CUDA_VISIBLE_DEVICES: '1'
 # log option
+log_filename: UNIT_log
 log_iter: 10
 log_patch: ./output/log
 # save and resume option
+resume_model: False
 model_path: ./output/model
 
