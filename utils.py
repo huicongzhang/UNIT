@@ -93,3 +93,18 @@ class Timer:
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         print(self.msg % (time.time() - self.start_time))
+def write_loss(iterations, trainer, train_writer):
+    members = [attr for attr in dir(trainer) \
+               if not callable(getattr(trainer, attr)) and not attr.startswith("__") and ('loss' in attr or 'grad' in attr or 'nwd' in attr)]
+    for m in members:
+        train_writer.add_scalar(m, getattr(trainer, m), iterations + 1)
+def get_model_list(dirname, key):
+    if os.path.exists(dirname) is False:
+        return None
+    gen_models = [os.path.join(dirname, f) for f in os.listdir(dirname) if
+                  os.path.isfile(os.path.join(dirname, f)) and key in f and ".pt" in f]
+    if gen_models is None:
+        return None
+    gen_models.sort()
+    last_model_name = gen_models[-1]
+    return last_model_name

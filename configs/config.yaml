@@ -36,3 +36,9 @@ batch_size: 10
 num_worker: 4
 # cuda option
 CUDA_VISIBLE_DEVICES: '1'
+# log option
+log_iter: 10
+log_patch: ./output/log
+# save and resume option
+model_path: ./output/model
+
