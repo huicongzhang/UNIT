@@ -32,7 +32,7 @@ def get_data_loader_from_csv(root_dir,csv_file,
     transform_list = [transforms.ToTensor(),
                       transforms.Normalize((0.5, 0.5, 0.5),
                                            (0.5, 0.5, 0.5))]
-    transform_list = [transforms.RandomCrop(size=(height,width))] + transform_list if crop else transform_list
+    # transform_list = [transforms.RandomCrop(size=(height,width))] + transform_list if crop else transform_list
     transform_list = [transforms.Resize(new_size)] + transform_list if new_size is not None else transform_list
     transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
     transform = transforms.Compose(transform_list)
