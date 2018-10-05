@@ -25,7 +25,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = config['CUDA_VISIBLE_DEVICES']
 trainer = UNIT_Gender_Trainer(config)
 trainer.cuda()
 train_a,test_a,train_b,test_b = get_train_test_data_loader(
-        root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],num_workers=config['num_worker']
+        root_dir=config['root_dir'],csv_file=config['csv_dir'],batch_size=config['batch_size'],crop_size=config['crop_size'],crop=config['crop'],new_size=config['new_size'],num_workers=config['num_worker']
     )
 train_display_images_a = torch.stack([train_a.dataset[i] for i in range(config['display_size'])]).cuda()
 train_display_images_b = torch.stack([train_b.dataset[i] for i in range(config['display_size'])]).cuda()

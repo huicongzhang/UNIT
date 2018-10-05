@@ -34,6 +34,9 @@ root_dir: /home/zhc/Image/UTKFace/UTKFace
 csv_dir: ./datasets/UTKFace.csv
 batch_size: 10
 num_worker: 4
+new_size: 128
+crop: False
+crop_size: 128
 # cuda option
 CUDA_VISIBLE_DEVICES: '1'
 # log option

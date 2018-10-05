@@ -41,15 +41,15 @@ def get_data_loader_from_csv(root_dir,csv_file,
     dataset = Dataset_folder(csv_file,root_dir,M_or_W,train,transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
-def get_train_test_data_loader(root_dir,csv_file,batch_size,height=128,width=128,
+def get_train_test_data_loader(root_dir,csv_file,batch_size,crop_size,
                             new_size=256,
                             num_workers=4,
                             crop=False
                             ):
-    train_a = get_data_loader_from_csv(root_dir,csv_file,batch_size,0,height=height,width=width,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
-    train_b = get_data_loader_from_csv(root_dir,csv_file,batch_size,1,height=height,width=width,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
-    test_a = get_data_loader_from_csv(root_dir,csv_file,batch_size,0,height=height,width=width,new_size=new_size,train=False,num_workers=num_workers,crop=crop)
-    test_b = get_data_loader_from_csv(root_dir,csv_file,batch_size,1,height=height,width=width,new_size=new_size,train=False,num_workers=num_workers,crop=crop)
+    train_a = get_data_loader_from_csv(root_dir,csv_file,batch_size,0,height=crop_size,width=crop_size,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
+    train_b = get_data_loader_from_csv(root_dir,csv_file,batch_size,1,height=crop_size,width=crop_size,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
+    test_a = get_data_loader_from_csv(root_dir,csv_file,batch_size,0,height=crop_size,width=crop_size,new_size=new_size,train=False,num_workers=num_workers,crop=crop)
+    test_b = get_data_loader_from_csv(root_dir,csv_file,batch_size,1,height=crop_size,width=crop_size,new_size=new_size,train=False,num_workers=num_workers,crop=crop)
     return train_a,test_a,train_b,test_b
 def get_lr_scheduler(optimizer, hyperparameters, iterations=-1):
     if 'lr_policy' not in hyperparameters or hyperparameters['lr_policy'] == 'constant':
