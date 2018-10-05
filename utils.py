@@ -32,7 +32,7 @@ def get_data_loader_from_csv(root_dir,csv_file,
     transform_list = [transforms.ToTensor(),
                       transforms.Normalize((0.5, 0.5, 0.5),
                                            (0.5, 0.5, 0.5))]
-    # transform_list = [transforms.RandomCrop(size=(height,width))] + transform_list if crop else transform_list
+    transform_list = [transforms.RandomCrop(size=(height,width))] + transform_list if crop else transform_list
     transform_list = [transforms.Resize(new_size)] + transform_list if new_size is not None else transform_list
     transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
     transform = transforms.Compose(transform_list)
@@ -44,7 +44,7 @@ def get_data_loader_from_csv(root_dir,csv_file,
 def get_train_test_data_loader(root_dir,csv_file,batch_size,height=128,width=128,
                             new_size=256,
                             num_workers=4,
-                            crop=True
+                            crop=False
                             ):
     train_a = get_data_loader_from_csv(root_dir,csv_file,batch_size,0,height=height,width=width,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
     train_b = get_data_loader_from_csv(root_dir,csv_file,batch_size,1,height=height,width=width,new_size=new_size,train=True,num_workers=num_workers,crop=crop)
