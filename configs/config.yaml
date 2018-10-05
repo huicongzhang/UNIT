@@ -19,7 +19,9 @@ dis:
 lr: 0.0002
 input_dim_a: 3
 input_dim_b: 3
-lr_policy: constant           # constant or step
+lr_policy: step           # constant or step
+step_size: 4000
+gamma: 0.5
 init: gaussian                # gaussian/xavier/kaiming/orthogonal/default
 gan_type: lsgan               # lsgan/nsgan
 # loss weight
