@@ -16,7 +16,7 @@ dis:
   num_scales: 3               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
 # train option
-lr: 0.002
+lr: 0.0002
 input_dim_a: 3
 input_dim_b: 3
 lr_policy: constant           # constant or step
