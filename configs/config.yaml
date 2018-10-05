@@ -16,7 +16,7 @@ dis:
   num_scales: 3               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
 # train option
-lr: 0.002
+lr: 0.0002
 input_dim_a: 3
 input_dim_b: 3
 lr_policy: constant           # constant or step
@@ -32,7 +32,7 @@ recon_kl_cyc_w: 0.01          # weight of KL loss for cycle consistency
 # dataset option
 root_dir: /home/zhc/Image/UTKFace/UTKFace
 csv_dir: ./datasets/UTKFace.csv
-batch_size: 10
+batch_size: 12
 num_worker: 4
 # cuda option
 CUDA_VISIBLE_DEVICES: '1'
