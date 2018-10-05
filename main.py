@@ -54,11 +54,12 @@ if __name__ == "__main__":
         for it,(images_a,images_b) in enumerate(zip(train_a,train_b)):
             trainer.update_learning_rate()
             images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
-            with Timer("Elapsed time in update: %f"):
-                # Main training code
-                trainer.dis_update(images_a, images_b, config)
-                trainer.gen_update(images_a, images_b, config)
-                torch.cuda.synchronize()
+            
+            # Main training code
+            trainer.dis_update(images_a, images_b, config)
+            trainer.gen_update(images_a, images_b, config)
+            torch.cuda.synchronize()
+            print("step:{}".format(iterations))
             if iterations%10 == 0:
                 write_loss(iterations,trainer,train_writer)
                 with torch.no_grad():
