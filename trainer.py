@@ -116,7 +116,7 @@ class UNIT_Gender_Trainer(nn.Module):
         if self.gen_scheduler is not None:
             self.gen_scheduler.step()
     def sample(self, x_a, x_b):
-        # 为什么要把一个batch的图片拆开又合并?
+        
         self.eval()
         x_a_recon, x_b_recon, x_ba, x_ab = [], [], [], []
         for i in range(x_a.size(0)):
